@@ -1,0 +1,82 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+export interface UserProfile {
+  _id: string;
+  phone: string;
+  name?: string;
+  role: string;
+  isPending: boolean;
+  token: string;
+  avatarColor?: string;
+}
+
+interface AuthContextType {
+  user: UserProfile | null;
+  isLoggedIn: boolean;
+  isLoginOpen: boolean;
+  openLoginModal: () => void;
+  closeLoginModal: () => void;
+  loginWithData: (userData: UserProfile) => void;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const AUTH_STORAGE_KEY = 'guided_wealth_user';
+
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch (e) {
+      console.error('Failed to load user state from localStorage', e);
+    }
+  }, []);
+
+  const openLoginModal = () => setIsLoginOpen(true);
+  const closeLoginModal = () => setIsLoginOpen(false);
+
+  const loginWithData = (userData: UserProfile) => {
+    const newUser = {
+      ...userData,
+      avatarColor: 'bg-accent',
+    };
+    setUser(newUser);
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoggedIn: !!user,
+        isLoginOpen,
+        openLoginModal,
+        closeLoginModal,
+        loginWithData,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

@@ -1,0 +1,65 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Instagram, Mail, Phone, MapPin } from 'lucide-react';
+
+const LOGO_URL = "/assets/logo.png";
+
+export default function Footer() {
+  return (
+    <footer className="bg-primary text-cream pt-20 pb-10 px-6 md:px-12 lg:px-24">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+        <div className="space-y-6">
+          <img src={LOGO_URL} alt="Guided Wealthy" className="h-16 w-auto brightness-0 invert" referrerPolicy="no-referrer" />
+          <p className="text-cream/70 leading-relaxed">
+            Empowering individuals and families to take control of their financial future with clarity, confidence, and discipline.
+          </p>
+          <div className="flex space-x-4">
+            <a href="https://www.instagram.com/guidedwealthy" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors"><Instagram size={20} /></a>
+            <a href="mailto:guidedwealthy@gmail.com" className="hover:text-accent transition-colors"><Mail size={20} /></a>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-serif text-xl mb-6">Quick Links</h4>
+          <ul className="space-y-4 text-cream/70">
+            <li><Link to="/" className="hover:text-accent transition-colors">Home</Link></li>
+            <li><Link to="/services" className="hover:text-accent transition-colors">Our Expertise</Link></li>
+            <li><Link to="/about" className="hover:text-accent transition-colors">About Us</Link></li>
+            <li><Link to="/booking" className="hover:text-accent transition-colors">Book a Session</Link></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="font-serif text-xl mb-6">Contact Us</h4>
+          <ul className="space-y-4 text-cream/70">
+            <li className="flex items-center space-x-3">
+              <Mail size={18} className="text-accent" />
+              <span>guidedwealthy@gmail.com</span>
+            </li>
+            <li className="flex items-center space-x-3">
+              <Phone size={18} className="text-accent" />
+              <span>+91 8655429715</span>
+            </li>
+            <li className="flex items-center space-x-3">
+              <MapPin size={18} className="text-accent" />
+              <span>Bld no 16, 3rd floor, AR layout, Banaswadi, Bangalore, 560043</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto mt-20 pt-10 border-t border-white/10 text-center text-cream/50 text-sm space-y-4">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <p>© {new Date().getFullYear()} Guided Wealthy. All rights reserved.</p>
+          <div className="flex space-x-6">
+            <Link to="/privacy-policy" className="hover:text-accent transition-colors">Privacy Policy</Link>
+            <Link to="/legal" className="hover:text-accent transition-colors">Legal</Link>
+          </div>
+        </div>
+        <p className="max-w-3xl mx-auto italic">
+          “Investments in financial markets are subject to risks. Please evaluate all related documents carefully before making any investment decisions. Registration, certifications, or past experience do not guarantee future performance or returns.”
+        </p>
+      </div>
+    </footer>
+  );
+}
