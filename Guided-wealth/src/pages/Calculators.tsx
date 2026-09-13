@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Search } from 'lucide-react';
 import * as Icons from 'lucide-react';
@@ -607,6 +607,20 @@ export default function Calculators() {
 
     const sectionTitle = searchParams.get('title') || searchParams.get('calc') || 'All Calculators';
 
+    useEffect(() => {
+        if (sectionTitle && sectionTitle !== 'All Calculators') {
+            setTimeout(() => {
+                const elementId = sectionTitle.toLowerCase().replace(/\s+/g, '-');
+                const element = document.getElementById(elementId);
+                if (element) {
+                    const yOffset = -140;
+                    const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                }
+            }, 100);
+        }
+    }, [sectionTitle]);
+
     const filteredData = calculatorData.map(section => ({
         ...section,
         items: section.items.filter(item => 
@@ -654,7 +668,7 @@ export default function Calculators() {
                 {/* Sections */}
                 <div className="space-y-16">
                     {filteredData.map((section, index) => (
-                        <div key={index}>
+                        <div key={index} id={section.title.toLowerCase().replace(/\s+/g, '-')}>
                             <h2 className="text-xl md:text-2xl font-semibold text-[#c08226] tracking-tight mb-6">
                                 {section.title}
                             </h2>
