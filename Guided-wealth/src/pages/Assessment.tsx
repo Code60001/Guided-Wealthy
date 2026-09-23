@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { assessmentQuestions, getRiskCategory } from '../constants/assessmentQuestions';
 import axios from 'axios';
@@ -8,6 +8,9 @@ import { ChevronRight, ChevronLeft, ShieldCheck, CheckCircle, AlertCircle } from
 export default function Assessment() {
   const { user, isLoggedIn, updateUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const isRetake = searchParams.get('retake') === 'true';
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, { text: string, points: number }>>({});
@@ -15,24 +18,38 @@ export default function Assessment() {
   const [result, setResult] = useState<{ score: number, category: string, allocation: string } | null>(null);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    const fetchAssessment = async () => {
+      if (user?.hasCompletedRiskAssessment && !isRetake) {
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+          const response = await axios.get(`${apiUrl}/assessment`, {
+            headers: { Authorization: `Bearer ${user?.token}` }
+          });
+          if (response.data) {
+            const { score, riskCategory } = response.data;
+            const { allocation } = getRiskCategory(score);
+            setResult({ score, category: riskCategory, allocation });
+          }
+        } catch (err) {
+          console.error("Failed to fetch existing assessment");
+        }
+      }
+    };
+    if (isLoggedIn) {
+      fetchAssessment();
+    }
+  }, [user?.hasCompletedRiskAssessment, user?.token, isLoggedIn, isRetake]);
+
   // Protect route
   if (!isLoggedIn) {
     return <Navigate to="/" replace />;
   }
   
-  if (user?.hasCompletedRiskAssessment && !result) {
+  if (user?.hasCompletedRiskAssessment && !result && !isRetake) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center p-6 bg-cream/30">
-        <div className="bg-white p-8 rounded-3xl shadow-xl text-center max-w-md w-full border border-primary/10">
-          <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-serif font-bold text-ink mb-2">Assessment Completed</h2>
-          <p className="text-primary/70 text-sm mb-6">
-            You have already completed your risk profile assessment. Your portfolio is being tailored to your needs.
-          </p>
-          <button onClick={() => navigate('/profile')} className="btn-primary w-full py-3 rounded-xl font-bold">
-            View My Profile
-          </button>
-        </div>
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -49,6 +66,11 @@ export default function Assessment() {
   };
 
   const handleNext = () => {
+    if (!canProceed) {
+      setError('Please select an option to proceed to the next question.');
+      return;
+    }
+    setError('');
     if (currentQuestionIndex < assessmentQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       window.scrollTo(0, 0);
@@ -86,7 +108,6 @@ export default function Assessment() {
       
       setResult({ score, category: riskCategory, allocation });
       updateUser({ hasCompletedRiskAssessment: true });
-      localStorage.setItem('risk_profile', JSON.stringify({ score, category: riskCategory, allocation }));
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to submit assessment. Please try again.');
     } finally {
@@ -129,7 +150,7 @@ export default function Assessment() {
             </div>
           </div>
           
-          <button onClick={() => navigate('/')} className="btn-primary px-8 py-4 rounded-xl font-bold w-full md:w-auto">
+          <button onClick={() => navigate('/dashboard')} className="btn-primary px-8 py-4 rounded-xl font-bold w-full md:w-auto">
             Return to Dashboard
           </button>
         </div>
@@ -239,8 +260,7 @@ export default function Assessment() {
               ) : (
                 <button
                   onClick={handleNext}
-                  disabled={!canProceed}
-                  className="bg-primary text-cream hover:bg-ink flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg active:scale-95 transition-all"
+                  className="bg-primary text-cream hover:bg-ink flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold uppercase tracking-wide shadow-md hover:shadow-lg active:scale-95 transition-all"
                 >
                   Next
                   <ChevronRight size={20} className="text-accent" />

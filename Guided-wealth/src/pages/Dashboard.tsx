@@ -3,40 +3,83 @@ import { useAuth } from '../context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { ShieldCheck } from 'lucide-react';
+import axios from 'axios';
+import { getRiskCategory } from '../constants/assessmentQuestions';
 
 export default function Dashboard() {
   const { user, isLoggedIn } = useAuth();
-  const [retirementData, setRetirementData] = useState<any>(() => {
-    const data = localStorage.getItem('retirement_analysis');
-    return data ? JSON.parse(data) : null;
-  });
-  const [riskData, setRiskData] = useState<any>(() => {
-    const rData = localStorage.getItem('risk_profile');
-    return rData ? JSON.parse(rData) : null;
-  });
-  const [activeTab, setActiveTab] = useState<'retirement' | 'risk'>(() => {
-    const dataStr = localStorage.getItem('retirement_analysis');
-    const rDataStr = localStorage.getItem('risk_profile');
-    
-    let hasRet = false;
-    let hasRisk = false;
-    
-    try {
-      if (dataStr) {
-        const d = JSON.parse(dataStr);
-        hasRet = !!(d && d.inputs && d.inputs.currentAge !== '' && d.inputs.currentAge > 0);
-      }
-      if (rDataStr) {
-        const r = JSON.parse(rDataStr);
-        hasRisk = !!(r && r.score !== undefined);
-      }
-    } catch(e) {}
+  const [retirementData, setRetirementData] = useState<any>(null);
+  const [riskData, setRiskData] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'retirement' | 'risk'>('retirement');
+  const [isLoading, setIsLoading] = useState(true);
 
-    return (!hasRet && hasRisk) ? 'risk' : 'retirement';
-  });
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!isLoggedIn || !user?.token) return;
+      
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+        
+        // Fetch retirement data
+        try {
+          const retRes = await axios.get(`${apiUrl}/retirement-analysis`, {
+            headers: { Authorization: `Bearer ${user.token}` }
+          });
+          if (retRes.data && retRes.data.results) {
+            setRetirementData(retRes.data.results);
+          } else if (retRes.data && retRes.data.inputs) {
+             // Fallback if results are at the root
+             setRetirementData(retRes.data);
+          }
+        } catch (e) {
+          console.error("No retirement data found");
+        }
+
+        // Fetch risk data
+        if (user.hasCompletedRiskAssessment) {
+          try {
+            const riskRes = await axios.get(`${apiUrl}/assessment`, {
+              headers: { Authorization: `Bearer ${user.token}` }
+            });
+            if (riskRes.data) {
+              const { score, riskCategory } = riskRes.data;
+              const { allocation } = getRiskCategory(score);
+              setRiskData({ score, category: riskCategory, allocation });
+            }
+          } catch (e) {
+            console.error("No risk data found");
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching dashboard data", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [isLoggedIn, user]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!retirementData && riskData) {
+        setActiveTab('risk');
+      } else {
+        setActiveTab('retirement');
+      }
+    }
+  }, [isLoading, retirementData, riskData]);
 
   if (!isLoggedIn) {
     return <Navigate to="/" replace />;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-cream/30 p-8 pt-28 font-sans flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   const isRetirementValid = retirementData && retirementData.inputs && retirementData.inputs.currentAge !== '' && retirementData.inputs.currentAge > 0;
@@ -429,7 +472,7 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-8 pt-6 border-t border-primary/10">
-          <Link to="/assessment" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold uppercase tracking-wide text-primary bg-primary/5 hover:bg-primary/10 transition-colors">
+          <Link to="/assessment?retake=true" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold uppercase tracking-wide text-primary bg-primary/5 hover:bg-primary/10 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
             Retake Assessment
           </Link>

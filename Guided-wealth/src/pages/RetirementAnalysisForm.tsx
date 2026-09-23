@@ -4,26 +4,29 @@ import { useAuth } from '../context/AuthContext';
 import { ChevronRight, ChevronLeft, TrendingUp, Calculator, CheckCircle, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 
-const Field = ({ label, name, type = "number", options, step, inputs, onChange, placeholder }: any) => {
+const Field = ({ label, name, type = "number", options, step, inputs, onChange, placeholder, required = true }: any) => {
   const defaultPlaceholder = `Enter ${label.replace(/ \(.+\)/, '').replace(/[\?]/, '')}`;
   return (
     <div>
-      <label className="block text-xs font-bold uppercase tracking-widest text-primary mb-2 min-h-[32px] flex items-end">{label}</label>
+      <label className="block text-xs font-bold uppercase tracking-widest text-primary mb-2 min-h-[32px] flex items-end">
+        {label} {required && <span className="text-red-500 ml-1">*</span>}
+      </label>
       {options ? (
-        <select name={name} value={(inputs as any)[name]} onChange={onChange} className="form-input">
+        <select required={required} name={name} value={(inputs as any)[name]} onChange={onChange} className="form-input">
           <option value="" disabled>Select...</option>
           {options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
         </select>
       ) : (
-        <input type={type} step={step} name={name} value={(inputs as any)[name]} onChange={onChange} className="form-input" placeholder={placeholder || defaultPlaceholder} />
+        <input required={required} type={type} step={step} name={name} value={(inputs as any)[name]} onChange={onChange} className="form-input" placeholder={placeholder || defaultPlaceholder} />
       )}
     </div>
   );
 };
 
 export default function RetirementAnalysisForm() {
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, updateUser } = useAuth();
   const navigate = useNavigate();
+  const stepRef = React.useRef<HTMLDivElement>(null);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -221,7 +224,7 @@ export default function RetirementAnalysisForm() {
         { headers: { Authorization: `Bearer ${user?.token}` } }
       );
 
-      localStorage.setItem('retirement_analysis', JSON.stringify(results));
+      updateUser({ hasCompletedRetirementAnalysis: true });
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to submit form. Please try again.');
@@ -232,6 +235,24 @@ export default function RetirementAnalysisForm() {
   };
 
   const handleNext = () => {
+    if (stepRef.current) {
+      const fields = stepRef.current.querySelectorAll('input[required], select[required]');
+      let isValid = true;
+      for (let i = 0; i < fields.length; i++) {
+        const field = fields[i] as HTMLInputElement | HTMLSelectElement;
+        if (!field.validity.valid) {
+          field.reportValidity();
+          isValid = false;
+          break;
+        }
+      }
+      if (!isValid) {
+        setError('Please fill in all required fields to proceed.');
+        return;
+      }
+    }
+
+    setError('');
     if (currentStep < steps.length - 1) {
       setCurrentStep(prev => prev + 1);
       window.scrollTo(0, 0);
@@ -251,11 +272,11 @@ export default function RetirementAnalysisForm() {
       content: (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
           <Field inputs={inputs} onChange={handleChange} label="Current Age" name="currentAge" />
-          <Field inputs={inputs} onChange={handleChange} label="Gender" name="gender" type="text" options={['Male', 'Female', 'Other']} />
-          <Field inputs={inputs} onChange={handleChange} label="Marital Status" name="maritalStatus" type="text" options={['Single', 'Married', 'Divorced', 'Widowed']} />
+          <Field inputs={inputs} onChange={handleChange} label="Gender" name="gender" type="text" options={['Male', 'Female', 'Other']} required={false} />
+          <Field inputs={inputs} onChange={handleChange} label="Marital Status" name="maritalStatus" type="text" options={['Single', 'Married', 'Divorced', 'Widowed']} required={false} />
           <Field inputs={inputs} onChange={handleChange} label="Retirement Age (planned)" name="retirementAge" />
           <Field inputs={inputs} onChange={handleChange} label="Life Expectancy" name="lifeExpectancy" />
-          <Field inputs={inputs} onChange={handleChange} label="City Tier (for cost-of-living)" name="cityTier" type="text" options={['Tier 1 (Metro)', 'Tier 2', 'Tier 3']} />
+          <Field inputs={inputs} onChange={handleChange} label="City Tier (for cost-of-living)" name="cityTier" type="text" options={['Tier 1 (Metro)', 'Tier 2', 'Tier 3']} required={false} />
         </div>
       )
     },
@@ -265,10 +286,10 @@ export default function RetirementAnalysisForm() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
           <Field inputs={inputs} onChange={handleChange} label="Spouse - Working?" name="spouseWorking" type="text" options={['Yes', 'No']} />
           <Field inputs={inputs} onChange={handleChange} label="Number of Children (planned/current)" name="numChildren" />
-          <Field inputs={inputs} onChange={handleChange} label="Avg. Current Age of Children (if born)" name="childrenAvgAge" />
-          <Field inputs={inputs} onChange={handleChange} label="Years until 1st child (if none yet)" name="yearsToFirstChild" />
+          <Field inputs={inputs} onChange={handleChange} label="Avg. Current Age of Children (if born)" name="childrenAvgAge" required={inputs.numChildren > 0} />
+          <Field inputs={inputs} onChange={handleChange} label="Years until 1st child (if none yet)" name="yearsToFirstChild" required={false} />
           <Field inputs={inputs} onChange={handleChange} label="Dependent Parents to Support?" name="dependentParents" type="text" options={['Yes', 'No']} />
-          <Field inputs={inputs} onChange={handleChange} label="Monthly Support to Parents (today's cost)" name="monthlySupportParents" />
+          <Field inputs={inputs} onChange={handleChange} label="Monthly Support to Parents (today's cost)" name="monthlySupportParents" required={inputs.dependentParents === 'Yes'} />
         </div>
       )
     },
@@ -277,8 +298,8 @@ export default function RetirementAnalysisForm() {
       content: (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
           <Field inputs={inputs} onChange={handleChange} label="Your Monthly Income (take-home)" name="monthlyIncome" />
-          <Field inputs={inputs} onChange={handleChange} label="Spouse's Monthly Income (if working)" name="spouseIncome" />
-          <Field inputs={inputs} onChange={handleChange} label="Other Monthly Income (rental/biz/etc.)" name="otherIncome" />
+          <Field inputs={inputs} onChange={handleChange} label="Spouse's Monthly Income (if working)" name="spouseIncome" required={inputs.spouseWorking === 'Yes'} />
+          <Field inputs={inputs} onChange={handleChange} label="Other Monthly Income (rental/biz/etc.)" name="otherIncome" required={false} />
           <Field inputs={inputs} onChange={handleChange} label="Existing Investments / Savings (current corpus)" name="existingInvestments" />
         </div>
       )
@@ -296,7 +317,7 @@ export default function RetirementAnalysisForm() {
           <Field inputs={inputs} onChange={handleChange} label="Personal Care & Health (non-insurance)" name="personalCare" />
           <Field inputs={inputs} onChange={handleChange} label="Entertainment & Dining Out" name="entertainment" />
           <Field inputs={inputs} onChange={handleChange} label="Miscellaneous / Other Monthly Expenses" name="miscellaneous" />
-          <Field inputs={inputs} onChange={handleChange} label="Lifestyle Creep Rate (real growth, on top of inflation)" name="lifestyleCreep" step="0.1" />
+          <Field inputs={inputs} onChange={handleChange} label="Lifestyle Creep Rate (real growth, on top of inflation)" name="lifestyleCreep" step="0.1" required={false} />
         </div>
       )
     },
@@ -347,12 +368,12 @@ export default function RetirementAnalysisForm() {
       content: (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
           <Field inputs={inputs} onChange={handleChange} label="Planning to buy a house?" name="buyHouse" type="text" options={['Yes', 'No']} />
-          <Field inputs={inputs} onChange={handleChange} label="Years from now to purchase" name="yearsToHouse" />
-          <Field inputs={inputs} onChange={handleChange} label="Home Size / Type" name="homeSize" type="text" options={['1BHK', '2BHK', '3BHK', '4BHK', 'Villa']} />
-          <Field inputs={inputs} onChange={handleChange} label="Today's Cost of this House (current price)" name="houseCost" />
-          <Field inputs={inputs} onChange={handleChange} label="Down Payment % (rest via home loan)" name="downPaymentPct" />
-          <Field inputs={inputs} onChange={handleChange} label="Home Loan Interest Rate (p.a.)" name="homeLoanInterestRate" step="0.1" />
-          <Field inputs={inputs} onChange={handleChange} label="Home Loan Tenure (years)" name="homeLoanTenure" />
+          <Field inputs={inputs} onChange={handleChange} label="Years from now to purchase" name="yearsToHouse" required={inputs.buyHouse === 'Yes'} />
+          <Field inputs={inputs} onChange={handleChange} label="Home Size / Type" name="homeSize" type="text" options={['1BHK', '2BHK', '3BHK', '4BHK', 'Villa']} required={false} />
+          <Field inputs={inputs} onChange={handleChange} label="Today's Cost of this House (current price)" name="houseCost" required={inputs.buyHouse === 'Yes'} />
+          <Field inputs={inputs} onChange={handleChange} label="Down Payment % (rest via home loan)" name="downPaymentPct" required={inputs.buyHouse === 'Yes'} />
+          <Field inputs={inputs} onChange={handleChange} label="Home Loan Interest Rate (p.a.)" name="homeLoanInterestRate" step="0.1" required={false} />
+          <Field inputs={inputs} onChange={handleChange} label="Home Loan Tenure (years)" name="homeLoanTenure" required={false} />
         </div>
       )
     },
@@ -360,9 +381,9 @@ export default function RetirementAnalysisForm() {
       title: "6. CAR GOAL(S)",
       content: (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
-          <Field inputs={inputs} onChange={handleChange} label="Number of Cars Planned (lifetime)" name="numCars" />
+          <Field inputs={inputs} onChange={handleChange} label="Number of Cars Planned (lifetime)" name="numCars" required={false} />
           <Field inputs={inputs} onChange={handleChange} label="Years from now for 1st Car Purchase" name="yearsToFirstCar" />
-          <Field inputs={inputs} onChange={handleChange} label="Car Segment" name="carSegment" type="text" options={['Hatchback', 'Compact SUV', 'Mid-size Sedan/SUV', 'Luxury']} />
+          <Field inputs={inputs} onChange={handleChange} label="Car Segment" name="carSegment" type="text" options={['Hatchback', 'Compact SUV', 'Mid-size Sedan/SUV', 'Luxury']} required={false} />
           <Field inputs={inputs} onChange={handleChange} label="Today's Cost per Car (on-road price)" name="carCost" />
           <Field inputs={inputs} onChange={handleChange} label="Gap Between Car Replacements (years)" name="carReplacementGap" />
         </div>
@@ -372,13 +393,13 @@ export default function RetirementAnalysisForm() {
       title: "7. CHILDREN'S EDUCATION (per child)",
       content: (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
-          <Field inputs={inputs} onChange={handleChange} label="School Type" name="schoolType" type="text" options={['Private', 'Public', 'International']} />
-          <Field inputs={inputs} onChange={handleChange} label="Today's Annual School Cost" name="childAnnualSchool" />
-          <Field inputs={inputs} onChange={handleChange} label="Years of Schooling (till higher sec.)" name="yearsOfSchooling" />
-          <Field inputs={inputs} onChange={handleChange} label="Higher Education Location" name="higherEdLocation" type="text" options={['India', 'Abroad']} />
-          <Field inputs={inputs} onChange={handleChange} label="Higher Education Type" name="higherEdType" type="text" options={['Private', 'Public']} />
-          <Field inputs={inputs} onChange={handleChange} label="Today's Cost of Higher Education (total)" name="higherEdCost" />
-          <Field inputs={inputs} onChange={handleChange} label="Child's Age at Start of Higher Education" name="higherEdStartAge" />
+          <Field inputs={inputs} onChange={handleChange} label="School Type" name="schoolType" type="text" options={['Private', 'Public', 'International']} required={false} />
+          <Field inputs={inputs} onChange={handleChange} label="Today's Annual School Cost" name="childAnnualSchool" required={false} />
+          <Field inputs={inputs} onChange={handleChange} label="Years of Schooling (till higher sec.)" name="yearsOfSchooling" required={false} />
+          <Field inputs={inputs} onChange={handleChange} label="Higher Education Location" name="higherEdLocation" type="text" options={['India', 'Abroad']} required={false} />
+          <Field inputs={inputs} onChange={handleChange} label="Higher Education Type" name="higherEdType" type="text" options={['Private', 'Public']} required={false} />
+          <Field inputs={inputs} onChange={handleChange} label="Today's Cost of Higher Education (total)" name="higherEdCost" required={inputs.numChildren > 0} />
+          <Field inputs={inputs} onChange={handleChange} label="Child's Age at Start of Higher Education" name="higherEdStartAge" required={inputs.numChildren > 0} />
         </div>
       )
     },
@@ -386,11 +407,11 @@ export default function RetirementAnalysisForm() {
       title: "8. VACATIONS / LEISURE",
       content: (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
-          <Field inputs={inputs} onChange={handleChange} label="Domestic Vacations per Year (count)" name="domesticVacationsCount" />
-          <Field inputs={inputs} onChange={handleChange} label="Today's Cost per Domestic Vacation" name="domesticVacationCost" />
+          <Field inputs={inputs} onChange={handleChange} label="Domestic Vacations per Year (count)" name="domesticVacationsCount" required={false} />
+          <Field inputs={inputs} onChange={handleChange} label="Today's Cost per Domestic Vacation (annual)" name="domesticVacationCost" />
           <Field inputs={inputs} onChange={handleChange} label="Foreign Vacations - Frequency (every N years)" name="foreignVacationFreq" />
           <Field inputs={inputs} onChange={handleChange} label="Today's Cost per Foreign Vacation" name="foreignVacationCost" />
-          <Field inputs={inputs} onChange={handleChange} label="Continue Vacations into Retirement?" name="vacationsInRetirement" type="text" options={['yes', 'reduced', 'no']} />
+          <Field inputs={inputs} onChange={handleChange} label="Continue Vacations into Retirement?" name="vacationsInRetirement" type="text" options={['yes', 'reduced', 'no']} required={false} />
         </div>
       )
     },
@@ -398,12 +419,12 @@ export default function RetirementAnalysisForm() {
       title: "9. OTHER GOALS / BIG EXPENSES",
       content: (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
-          <Field inputs={inputs} onChange={handleChange} label="Wedding(s) - Total Today's Cost" name="weddingCost" />
-          <Field inputs={inputs} onChange={handleChange} label="Years from now for Wedding(s)" name="yearsToWedding" />
+          <Field inputs={inputs} onChange={handleChange} label="Wedding(s) - Total Today's Cost" name="weddingCost" required={inputs.numChildren > 0} />
+          <Field inputs={inputs} onChange={handleChange} label="Years from now for Wedding(s)" name="yearsToWedding" required={inputs.numChildren > 0} />
           <Field inputs={inputs} onChange={handleChange} label="Emergency Fund Target (months of expenses)" name="emergencyFundTarget" />
-          <Field inputs={inputs} onChange={handleChange} label="Parent Support Duration (years, fixed window)" name="parentSupportDuration" />
-          <Field inputs={inputs} onChange={handleChange} label="Parents' Medical Emergency Fund (target)" name="parentsMedicalFund" />
-          <Field inputs={inputs} onChange={handleChange} label="Years to Build Parents' Medical Fund" name="yearsToBuildMedicalFund" />
+          <Field inputs={inputs} onChange={handleChange} label="Parent Support Duration (years, fixed window)" name="parentSupportDuration" required={false} />
+          <Field inputs={inputs} onChange={handleChange} label="Parents' Medical Emergency Fund (target)" name="parentsMedicalFund" required={inputs.dependentParents === 'Yes'} />
+          <Field inputs={inputs} onChange={handleChange} label="Years to Build Parents' Medical Fund" name="yearsToBuildMedicalFund" required={inputs.dependentParents === 'Yes'} />
         </div>
       )
     },
@@ -415,7 +436,7 @@ export default function RetirementAnalysisForm() {
           <Field inputs={inputs} onChange={handleChange} label="Health Premium Rate (₹ per ₹1L cover)" name="healthPremiumRate" />
           <Field inputs={inputs} onChange={handleChange} label="Life Insurance Cover (term plan)" name="lifeInsuranceCover" />
           <Field inputs={inputs} onChange={handleChange} label="Life Premium Rate (₹ per ₹1L cover)" name="lifePremiumRate" />
-          <Field inputs={inputs} onChange={handleChange} label="Insurance Coverage Until Age" name="insuranceCoverageUntilAge" />
+          <Field inputs={inputs} onChange={handleChange} label="Insurance Coverage Until Age" name="insuranceCoverageUntilAge" required={false} />
         </div>
       )
     }
@@ -468,7 +489,7 @@ export default function RetirementAnalysisForm() {
             </h2>
 
             {/* Step Content */}
-            <div className="mb-10 min-h-[300px]" key={currentStep}>
+            <div className="mb-10 min-h-[300px]" key={currentStep} ref={stepRef}>
                {steps[currentStep].content}
             </div>
 

@@ -50,3 +50,23 @@ export const submitAssessment = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+// @desc    Get user's latest assessment
+// @route   GET /api/assessment
+// @access  Private
+export const getAssessment = async (req, res) => {
+  const userId = req.user.id || req.user._id;
+
+  try {
+    const assessment = await Assessment.findOne({ userId }).sort({ createdAt: -1 });
+
+    if (!assessment) {
+      return res.status(404).json({ message: "No assessment found" });
+    }
+
+    res.json(assessment);
+  } catch (error) {
+    console.error("Error getting assessment:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

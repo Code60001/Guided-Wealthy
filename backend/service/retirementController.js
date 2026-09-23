@@ -1,4 +1,5 @@
 import RetirementAnalysis from "../models/RetirementAnalysis.js";
+import User from "../models/User.js";
 
 // @desc    Get the current user's retirement analysis
 // @route   GET /api/retirement-analysis
@@ -36,6 +37,9 @@ export const saveRetirementAnalysis = async (req, res) => {
       incomeCheckpoints,
       results,
     });
+
+    // Update user to indicate retirement analysis completion
+    await User.findByIdAndUpdate(userId, { hasCompletedRetirementAnalysis: true });
 
     res.status(201).json({
       message: "Retirement Analysis submitted successfully",

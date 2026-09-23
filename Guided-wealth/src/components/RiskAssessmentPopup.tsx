@@ -1,35 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ShieldAlert, X, ArrowRight } from 'lucide-react';
 
 export default function RiskAssessmentPopup() {
   const { user, isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isVisible, setIsVisible] = useState(false);
+  const [hiddenPaths, setHiddenPaths] = useState<Record<string, boolean>>({});
 
   const hasRisk = user?.hasCompletedRiskAssessment;
-  
-  const dataStr = localStorage.getItem('retirement_analysis');
-  let hasRet = false;
-  try {
-    if (dataStr) {
-      const d = JSON.parse(dataStr);
-      hasRet = !!(d && d.inputs && d.inputs.currentAge !== '' && d.inputs.currentAge > 0);
-    }
-  } catch(e) {}
+  const hasRet = user?.hasCompletedRetirementAnalysis;
 
   useEffect(() => {
-    // Show popup if user is logged in, has not completed both assessments, and is not pending
-    if (isLoggedIn && user && !user.isPending && (!hasRisk || !hasRet)) {
+    // Only show on home or dashboard
+    const isAllowedRoute = location.pathname === '/' || location.pathname === '/dashboard';
+    const isHiddenForThisPath = hiddenPaths[location.pathname];
+    
+    // Show popup if user is logged in, has not completed both assessments, and is on an allowed route
+    if (isLoggedIn && user && !user.isPending && (!hasRisk || !hasRet) && isAllowedRoute && !isHiddenForThisPath) {
       const timer = setTimeout(() => {
         setIsVisible(true);
-      }, 1500); // Small delay after login for smooth UX
+      }, 1000); // 1s delay
       return () => clearTimeout(timer);
     } else {
       setIsVisible(false);
     }
-  }, [isLoggedIn, user, hasRisk, hasRet]);
+  }, [isLoggedIn, user, hasRisk, hasRet, location.pathname, hiddenPaths]);
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+    setHiddenPaths(prev => ({ ...prev, [location.pathname]: true }));
+  };
 
   if (!isVisible) return null;
 
@@ -37,11 +40,11 @@ export default function RiskAssessmentPopup() {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       <div 
         className="fixed inset-0 bg-ink/40 backdrop-blur-sm transition-opacity duration-300 animate-fadeIn"
-        onClick={() => setIsVisible(false)}
+        onClick={handleDismiss}
       />
       <div className="bg-white rounded-3xl shadow-2xl border border-primary/10 overflow-hidden w-full max-w-md relative z-10 animate-scaleUp">
         <button 
-          onClick={() => setIsVisible(false)}
+          onClick={handleDismiss}
           className="absolute top-3 right-3 text-primary/40 hover:text-primary transition-colors bg-cream/50 rounded-full p-1"
         >
           <X size={16} />
@@ -53,19 +56,23 @@ export default function RiskAssessmentPopup() {
               <ShieldAlert size={20} />
             </div>
             <h3 className="font-serif font-bold text-ink text-lg leading-tight">
-              Analyze Your Wealth Risk
+              {!hasRisk && !hasRet ? "Complete Your Financial Profile" : 
+               !hasRisk ? "Analyze Your Wealth Risk" : 
+               "Plan Your Retirement"}
             </h3>
           </div>
           
           <p className="text-sm text-primary/70 mb-5">
-            Discover your personalized investment risk profile to get tailored recommendations for your portfolio.
+            {!hasRisk && !hasRet ? "Discover your personalized investment risk profile and generate your retirement plan." : 
+             !hasRisk ? "Discover your personalized investment risk profile to get tailored recommendations for your portfolio." : 
+             "Plan your future and see how much you need to save to retire comfortably."}
           </p>
           
           <div className="space-y-3">
             {!hasRisk && (
               <button
                 onClick={() => {
-                  setIsVisible(false);
+                  handleDismiss();
                   navigate('/assessment');
                 }}
                 className="w-full bg-primary hover:bg-ink text-cream py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg active:scale-95"
@@ -77,7 +84,7 @@ export default function RiskAssessmentPopup() {
             {!hasRet && (
               <button
                 onClick={() => {
-                  setIsVisible(false);
+                  handleDismiss();
                   navigate('/retirement-analysis');
                 }}
                 className="w-full bg-cream hover:bg-accent/10 text-primary border border-primary/20 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all hover:border-accent active:scale-95"

@@ -114,114 +114,74 @@ export default function Resources() {
         }
     ];
 
-    useEffect(() => {
-        const handleScroll = () => {
-            const scrollPosition = window.scrollY + 180;
 
-            for (let i = categories.length - 1; i >= 0; i--) {
-                const cat = categories[i];
-                const element = document.getElementById(cat.id);
-                if (element) {
-                    const top = element.offsetTop;
-                    if (scrollPosition >= top) {
-                        setActiveId(cat.id);
-                        break;
-                    }
-                }
-            }
-        };
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [categories]);
-
-    const scrollToSection = (id: string) => {
-        setActiveId(id);
-        const element = document.getElementById(id);
-        if (element) {
-            const yOffset = -130;
-            const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-            window.scrollTo({ top: y, behavior: 'smooth' });
-        }
-    };
 
     return (
         <div className="bg-cream min-h-screen">
             <section className="pt-36 md:pt-40 pb-24 px-6 md:px-12 lg:px-20">
                 <div className="max-w-7xl mx-auto">
-                    <div className="flex flex-col lg:flex-row items-start justify-between gap-8 lg:gap-8 relative">
+                    {/* RESOURCES Tabs Header */}
+                    <div className="flex flex-col lg:flex-row items-center justify-between bg-ink text-cream p-3 mb-10 rounded-2xl shadow-xl gap-4">
+                        <div className="text-xl sm:text-2xl font-serif font-bold px-3 whitespace-nowrap">
+                            RESOURCES <span className="text-accent">—</span> Your Tools
+                        </div>
+                        <div className="flex gap-2 p-1 bg-primary/20 rounded-xl shrink-0 overflow-x-auto w-full lg:w-auto scrollbar-hide">
+                            {categories.map((cat) => {
+                                const isActive = activeId === cat.id;
+                                
+                                return (
+                                    <button
+                                        key={cat.id}
+                                        onClick={() => setActiveId(cat.id)}
+                                        className={`flex-1 sm:flex-none px-4 py-2.5 rounded-lg font-bold text-sm tracking-wide whitespace-nowrap transition-all ${isActive ? 'bg-accent text-ink shadow-md' : 'text-cream hover:bg-white/10'}`}
+                                    >
+                                        {cat.title}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-
-                        <div className="w-full lg:w-96 flex-shrink-0 lg:sticky lg:top-28 self-start z-10">
-                            <div className="p-2 lg:border-r border-slate-300 pr-4">
-                                <ul className="space-y-2">
-                                    {categories.map((cat) => {
-                                        const isActive = activeId === cat.id;
+                    {/* Content Section */}
+                    <div className="w-full">
+                        {categories.filter(c => c.id === activeId).map((cat) => (
+                            <div key={cat.id} className="animate-fadeIn space-y-6 mb-10">
+                                <h2 className="text-md uppercase tracking-widest font-semibold text-[#c08226] font-sans">
+                                    {cat.badge}
+                                </h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                                    {cat.items.map((card, idx) => {
+                                        const CardIcon = card.icon;
 
                                         return (
-                                            <button
-                                                key={cat.id}
-                                                onClick={() => scrollToSection(cat.id)}
-                                                className={`w-full px-6 py-4 rounded-xl text-xl flex items-center justify-between transition-all duration-300 text-left font-medium cursor-pointer ${isActive
-                                                    ? 'bg-gradient-to-r from-[#1c2b5e] via-[#263a79] to-[#324a92] text-white shadow-lg shadow-indigo-950/20'
-                                                    : 'bg-transparent text-slate-700 hover:bg-blue-50/80 hover:text-indigo-900'
-                                                    }`}
+                                            <div
+                                                key={idx}
+                                                onClick={() => {
+                                                    if (card.path) {
+                                                        navigate(card.path);
+                                                    } else {
+                                                        navigate(`/calculators?title=${encodeURIComponent(card.title)}&desc=${encodeURIComponent(card.description)}`);
+                                                    }
+                                                }}
+                                                className="bg-white rounded-xl p-6 border border-slate-200/80 shadow-xs hover:shadow-md hover:border-blue-300/80 transition-all duration-300 flex items-start gap-4 cursor-pointer group"
                                             >
-                                                <span>{cat.title}</span>
-                                                {isActive ? (
-                                                    <ChevronDown size={18} className="text-amber-300 stroke-[2.5]" />
-                                                ) : (
-                                                    <ChevronRight size={18} className="text-slate-400" />
-                                                )}
-                                            </button>
+                                                <div className="text-[#113262] mt-1 flex-shrink-0 group-hover:scale-110 transition-transform">
+                                                    <CardIcon size={20} />
+                                                </div>
+                                                <div className=" space-y-4">
+                                                    <h3 className="font-semibold text-[#113262] text-lg leading-snug group-hover:text-[#111827] transition-colors">
+                                                        {card.title}
+                                                    </h3>
+                                                    <p className="text-gray-500 text-md mt-2 leading-relaxed">
+                                                        {card.description}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         );
                                     })}
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div className="w-full flex-grow ">
-                            {categories.map((cat, index) => (
-                                <div key={cat.id} id={cat.id} className="scroll-mt-32 space-y-6 mb-10">
-
-                                    <h2 className={`text-md uppercase tracking-widest font-semibold text-[#c08226] font-sans ${index !== 0 ? 'border-t border-slate-200 pt-8' : ''}`}>
-                                        {cat.badge}
-                                    </h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-                                        {cat.items.map((card, idx) => {
-                                            const CardIcon = card.icon;
-
-                                            return (
-                                                <div
-                                                    key={idx}
-                                                    onClick={() => {
-                                                        if (card.path) {
-                                                            navigate(card.path);
-                                                        } else {
-                                                            navigate(`/calculators?title=${encodeURIComponent(card.title)}&desc=${encodeURIComponent(card.description)}`);
-                                                        }
-                                                    }}
-                                                    className="bg-white rounded-xl p-6 border border-slate-200/80 shadow-xs hover:shadow-md hover:border-blue-300/80 transition-all duration-300 flex items-start gap-4 cursor-pointer group"
-                                                >
-                                                    <div className="text-[#113262] mt-1 flex-shrink-0 group-hover:scale-110 transition-transform">
-                                                        <CardIcon size={20} />
-                                                    </div>
-                                                    <div className=" space-y-4">
-                                                        <h3 className="font-semibold text-[#113262] text-lg leading-snug group-hover:text-[#111827] transition-colors">
-                                                            {card.title}
-                                                        </h3>
-                                                        <p className="text-gray-500 text-md mt-2 leading-relaxed">
-                                                            {card.description}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
                                 </div>
-                            ))}
-                        </div>
-
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>

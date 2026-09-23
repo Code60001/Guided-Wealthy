@@ -9,6 +9,7 @@ export interface UserProfile {
   token: string;
   avatarColor?: string;
   hasCompletedRiskAssessment?: boolean;
+  hasCompletedRetirementAnalysis?: boolean;
 }
 
 interface AuthContextType {

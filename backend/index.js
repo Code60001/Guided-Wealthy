@@ -1,13 +1,11 @@
+import "dotenv/config.js";
 import express from "express";
-import { configDotenv } from "dotenv";
 import cors from "cors";
 import connectDB from "./service/db.js";
 import authRoutes from "./auth/authRoutes.js";
 import userRoutes from "./auth/userRoutes.js";
 import assessmentRoutes from "./auth/assessmentRoutes.js";
 import retirementRoutes from "./auth/retirementRoutes.js";
-
-configDotenv();
 
 // Connect to MongoDB
 connectDB();

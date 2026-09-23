@@ -74,6 +74,7 @@ export const authUser = async (req, res) => {
       role: user.role,
       isPending: user.isPending,
       hasCompletedRiskAssessment: user.hasCompletedRiskAssessment,
+      hasCompletedRetirementAnalysis: user.hasCompletedRetirementAnalysis,
       token: generateToken(user._id, user.role),
     });
   } catch (error) {
