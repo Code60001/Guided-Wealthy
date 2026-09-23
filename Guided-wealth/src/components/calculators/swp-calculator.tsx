@@ -287,7 +287,7 @@ export default function SwpCalculator() {
               Where P = Principal, r = monthly return rate, n = number of months. This ensures corpus lasts for desired period.
             </p>
 
-            <h3 className="text-lg font-bold text-[#113262] mb-4">Using the Maxiom Wealth SWP Calculator</h3>
+            <h3 className="text-lg font-bold text-[#113262] mb-4">Using the Guided Wealthy SWP Calculator</h3>
             <p className="text-sm mb-6">
               Input your investment corpus, desired monthly income, expected returns, and duration. The calculator will show withdrawal sustainability, remaining balance over time, and help balance between income needs and corpus preservation. Use it to plan retirement income or education funding.
             </p>

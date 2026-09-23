@@ -20,7 +20,7 @@ export default function SipForChildEducation() {
         </h1>
         <div className="flex items-center gap-4 text-sm text-slate-500">
           <span>Updated: 17 April 2026</span>
-          <span>Source: Maxiom Wealth</span>
+          <span>Source: Guided Wealthy</span>
         </div>
       </header>
 

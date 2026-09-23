@@ -242,7 +242,7 @@ export default function LumpsumInvestmentCalculator() {
               This calculation assumes reinvestment of gains and accounts for compounding effects over time.
             </p>
 
-            <h3 className="text-lg font-bold text-[#113262] mb-4">Using the Maxiom Wealth Lumpsum Calculator</h3>
+            <h3 className="text-lg font-bold text-[#113262] mb-4">Using the Guided Wealthy Lumpsum Calculator</h3>
             <p className="text-sm mb-6">
               Input your investment amount, expected annual returns, and investment duration. The calculator will project the potential maturity value, show wealth gained, and provide inflation-adjusted returns. Use it to compare different instruments and make informed investment decisions.
             </p>

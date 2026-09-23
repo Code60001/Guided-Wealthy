@@ -282,7 +282,7 @@ export default function MutualFundCalculator() {
               Mutual Fund returns are calculated using Compounded Annual Growth Rate (CAGR). For SIPs, returns are calculated using XIRR to account for multiple investments at different times. Returns depend on market performance and are subject to capital market risks.
             </p>
 
-            <h3 className="text-lg font-bold text-[#113262] mb-4">Using the Maxiom Wealth MF Calculator</h3>
+            <h3 className="text-lg font-bold text-[#113262] mb-4">Using the Guided Wealthy MF Calculator</h3>
             <p className="text-sm mb-6">
               Input your investment amount, expected return rate, and investment duration. Our calculator will project potential returns for both SIP and Lumpsum investments. This tool helps compare scenarios, understand compounding benefits, and make informed investment decisions aligned with your financial goals.
             </p>
