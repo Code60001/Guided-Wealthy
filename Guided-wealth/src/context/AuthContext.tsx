@@ -8,6 +8,7 @@ export interface UserProfile {
   isPending: boolean;
   token: string;
   avatarColor?: string;
+  hasCompletedRiskAssessment?: boolean;
 }
 
 interface AuthContextType {
@@ -18,6 +19,7 @@ interface AuthContextType {
   closeLoginModal: () => void;
   loginWithData: (userData: UserProfile) => void;
   logout: () => void;
+  updateUser: (userData: Partial<UserProfile>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,6 +58,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem(AUTH_STORAGE_KEY);
   };
 
+  const updateUser = (userData: Partial<UserProfile>) => {
+    if (user) {
+      const newUser = { ...user, ...userData };
+      setUser(newUser);
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -66,6 +76,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         closeLoginModal,
         loginWithData,
         logout,
+        updateUser,
       }}
     >
       {children}

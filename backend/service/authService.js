@@ -73,6 +73,7 @@ export const authUser = async (req, res) => {
       phone: user.phone,
       role: user.role,
       isPending: user.isPending,
+      hasCompletedRiskAssessment: user.hasCompletedRiskAssessment,
       token: generateToken(user._id, user.role),
     });
   } catch (error) {
@@ -117,6 +118,7 @@ export const registerPartnerAdvisor = async (req, res) => {
       phone: user.phone,
       countryCode: user.countryCode,
       role: user.role,
+      hasCompletedRiskAssessment: user.hasCompletedRiskAssessment,
     });
   } catch (error) {
     console.error("Error creating partner/advisor:", error);

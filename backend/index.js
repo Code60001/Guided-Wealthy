@@ -4,6 +4,8 @@ import cors from "cors";
 import connectDB from "./service/db.js";
 import authRoutes from "./auth/authRoutes.js";
 import userRoutes from "./auth/userRoutes.js";
+import assessmentRoutes from "./auth/assessmentRoutes.js";
+import retirementRoutes from "./auth/retirementRoutes.js";
 
 configDotenv();
 
@@ -26,6 +28,8 @@ app.get('/', (req, res) => {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/assessment", assessmentRoutes);
+app.use("/api/retirement-analysis", retirementRoutes);
 
 // Start the server
 app.listen(PORT, () => {

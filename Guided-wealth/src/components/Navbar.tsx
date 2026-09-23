@@ -96,6 +96,13 @@ export default function Navbar() {
                   
                   <div className="py-1">
                     <Link
+                      to="/dashboard"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center px-4 py-2 text-xs font-medium text-primary hover:bg-cream hover:text-accent transition-colors"
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
                       to="/profile"
                       onClick={() => setUserDropdownOpen(false)}
                       className="flex items-center px-4 py-2 text-xs font-medium text-primary hover:bg-cream hover:text-accent transition-colors"

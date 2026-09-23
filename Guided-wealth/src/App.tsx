@@ -14,6 +14,10 @@ import Resources from './pages/Resources';
 import Calculators from './pages/Calculators';
 import Research from './pages/Research';
 import Profile from './pages/Profile';
+import Dashboard from './pages/Dashboard';
+import Assessment from './pages/Assessment';
+import RetirementAnalysisForm from './pages/RetirementAnalysisForm';
+import RiskAssessmentPopup from './components/RiskAssessmentPopup';
 import SipFor1Crore from './components/research/sip-for-1-crore';
 import SipForChildEducation from './components/research/sip-for-child-education';
 import RetirementAt45 from './components/research/retirement-at-45';
@@ -145,6 +149,9 @@ export default function App() {
               <Route path="/resources" element={<Resources />} />
               <Route path="/research" element={<Research />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/assessment" element={<Assessment />} />
+              <Route path="/retirement-analysis" element={<RetirementAnalysisForm />} />
               <Route path="/research/sip-for-1-crore" element={<SipFor1Crore />} />
               <Route path="/research/sip-for-child-education" element={<SipForChildEducation />} />
               <Route path="/research/retirement-at-45" element={<RetirementAt45 />} />
@@ -259,6 +266,7 @@ export default function App() {
           </main>
           <Footer />
           <LoginModal />
+          <RiskAssessmentPopup />
         </div>
       </Router>
     </AuthProvider>

@@ -41,6 +41,10 @@ const userSchema = mongoose.Schema(
       dateOfBirth: { type: Date, required: false },
       gender: { type: String, enum: ["male", "female", "other"], required: false },
     },
+    hasCompletedRiskAssessment: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
