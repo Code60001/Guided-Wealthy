@@ -16,6 +16,9 @@ const app = express();
 const allowedOrigins = [
     "http://localhost:5173", 
     "http://localhost:3000",
+    "https://www.guidedwealthy.in",
+    "https://guidedwealthy.in",
+    "https://guided-wealth-hewy.vercel.app",
     process.env.FRONTEND_URL,
     process.env.ADMIN_FRONTEND_URL
 ].filter(Boolean);
