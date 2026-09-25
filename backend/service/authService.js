@@ -63,7 +63,12 @@ export const authUser = async (req, res) => {
         phone,
         name: name || "User",
         role: "user", // Default role
+        isPending: false, // Normal users shouldn't be pending
       });
+    } else if (user.role === 'user' && user.isPending) {
+      // Clear pending status for existing normal users
+      user.isPending = false;
+      await user.save();
     }
 
     // Generate our backend JWT for subsequent requests
