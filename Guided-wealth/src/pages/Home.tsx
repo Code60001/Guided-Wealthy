@@ -1,9 +1,21 @@
 import React from 'react';
 import { ArrowRight, CheckCircle2, TrendingUp, Users, ChevronDown, Building2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { TESTIMONIALS, FAQS } from '../constants';
+import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
+  const navigate = useNavigate();
+  const { isLoggedIn, openLoginModal } = useAuth();
+  
+  const handleProtectedAction = (path: string) => {
+    if (isLoggedIn) {
+      navigate(path);
+    } else {
+      openLoginModal();
+    }
+  };
+
   const testimonialsDoubled = [...TESTIMONIALS, ...TESTIMONIALS];
 
   return (
@@ -66,6 +78,22 @@ export default function Home() {
                   <p className="text-[10px] md:text-xs uppercase tracking-widest text-ink/50 font-bold">Clients Guided</p>
                 </div>
               </div>
+
+              {/* Action Buttons for Mobile & Desktop */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-4 lg:hidden">
+                <button 
+                  onClick={() => handleProtectedAction('/retirement-analysis')} 
+                  className="btn-primary flex items-center justify-center gap-2 text-sm md:text-base w-full sm:w-auto"
+                >
+                  Retirement & Goal Calculator <ArrowRight size={18} />
+                </button>
+                <button 
+                  onClick={() => handleProtectedAction('/assessment')} 
+                  className="btn-secondary flex items-center justify-center text-sm md:text-base w-full sm:w-auto"
+                >
+                  Risk Profile Evaluation
+                </button>
+              </div>
             </div>
 
             <div className="relative hidden lg:block -mt-8">
@@ -81,12 +109,18 @@ export default function Home() {
               <div className="absolute -bottom-10 -left-10 z-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
 
               <div className="flex flex-col sm:flex-row gap-4 pt-6 justify-center">
-                <Link to="/booking" className="btn-primary flex items-center justify-center gap-2 text-sm md:text-base">
-                  Start Your Journey <ArrowRight size={18} />
-                </Link>
-                <Link to="/services" className="btn-secondary flex items-center justify-center text-sm md:text-base">
-                  Explore Services
-                </Link>
+                <button 
+                  onClick={() => handleProtectedAction('/retirement-analysis')} 
+                  className="btn-primary flex items-center justify-center gap-2 text-sm md:text-base"
+                >
+                  Retirement & Goal Calculator <ArrowRight size={18} />
+                </button>
+                <button 
+                  onClick={() => handleProtectedAction('/assessment')} 
+                  className="btn-secondary flex items-center justify-center text-sm md:text-base"
+                >
+                  Risk Profile Evaluation
+                </button>
               </div>
             </div>
           </div>
