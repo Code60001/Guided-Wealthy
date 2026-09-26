@@ -51,7 +51,7 @@ app.use("/api/assessment", assessmentRoutes);
 app.use("/api/retirement-analysis", retirementRoutes);
 
 // Start the server
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     app.listen(PORT, () => {
         console.log(`Server is live at http://localhost:${PORT}`);
     });
