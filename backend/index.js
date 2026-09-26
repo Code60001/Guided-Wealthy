@@ -51,6 +51,10 @@ app.use("/api/assessment", assessmentRoutes);
 app.use("/api/retirement-analysis", retirementRoutes);
 
 // Start the server
-app.listen(PORT, () => {
-    console.log(`Server is live at http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server is live at http://localhost:${PORT}`);
+    });
+}
+
+export default app;
